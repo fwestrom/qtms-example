@@ -1,0 +1,3 @@
+[submodule "qtms-util"]
+	path = qtms-util
+	url = git@github.com:fwestrom/qtms-util.git
