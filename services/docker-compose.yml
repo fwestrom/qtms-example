@@ -100,11 +100,11 @@ services:
                 constraints:
                     - engine.labels.com.qtort.role == db
 
-    api-web:
-        image: qs/api-web
+    ep-web:
+        image: qs/qtms-ep-web
         entrypoint:
             - node
-            - /opt/api-web
+            - /opt/qtms-ep-web
             - --broker=${qs_broker}
             - --defaultExchange=${qs_ep_exchange}
             - --ll=${qs_loglevel}
