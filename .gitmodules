@@ -2,10 +2,10 @@
 	path = qtms-util
 	url = git@github.com:fwestrom/qtms-util.git
 
-[submodule "qtms-ep-web"]
+[submodule "services/qtms-ep-web"]
 	path = services/qtms-ep-web
 	url = git@github.com:fwestrom/qtms-ep-web.git
 
-[submodule "qtms-api-root"]
+[submodule "services/qtms-api-root"]
 	path = services/qtms-api-root
 	url = git@github.com:fwestrom/qtms-api-root.git
