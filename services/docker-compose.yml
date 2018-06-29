@@ -32,7 +32,7 @@ services:
             - ${qs_http_port}:80
             - ${qs_https_port}:443
         depends_on:
-            - ep-web
+            - qtms-ep-web
             # - qs-app-ui
         deploy:
             placement:
@@ -40,7 +40,7 @@ services:
                     - engine.labels.com.qtort.role == worker
 
     broker1:
-        image: rabbitmq:3-management
+        image: rabbitmq:management
         networks:
             - default
         ports:
@@ -68,8 +68,8 @@ services:
     #             constraints:
     #                 - engine.labels.com.qtort.role == db
 
-    ep-web:
-        image: qs/qtms-ep-web
+    qtms-ep-web:
+        image: docker.qtort.com/qs/qtms-ep-web
         entrypoint:
             - node
             - /opt/qtms-ep-web
