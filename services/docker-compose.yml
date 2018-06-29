@@ -55,37 +55,6 @@ services:
                 constraints:
                     - engine.labels.com.qtort.role == broker
 
-    elasticsearch:
-        image: elasticsearch:latest
-        networks:
-            - default
-        ports:
-            - 9200:9200
-            - 9300:9300
-        volumes:
-            - ${qs_data}/elasticsearch-data:/usr/share/elasticsearch/data
-        deploy:
-            replicas: 0
-            placement:
-                constraints:
-                    - engine.labels.com.qtort.role == db
-
-    kibana:
-        image: kibana:latest
-        networks:
-            - default
-        ports:
-            - 5601:5601
-        environment:
-            - "ELASTICSEARCH_URL=${qs_elasticsearch}"
-        depends_on:
-            - elasticsearch
-        deploy:
-            replicas: 0
-            placement:
-                constraints:
-                    - engine.labels.com.qtort.role == worker
-
     mongo1:
         image: mongo
         networks:
@@ -115,36 +84,12 @@ services:
         depends_on:
             - broker1
 
-    ep-sftp-in:
-        image: qs/ep-sftp-in
-        entrypoint:
-            - node
-            - /opt/ep-sftp-in
-            - --broker=${qs_broker}
-            - --defaultExchange=${qs_ep_exchange}
-            - --ll=${qs_loglevel}
-        networks:
-            public:
-            ep:
-                ipv4_address: 172.29.91.22
-            default:
-        ports:
-            - ${qs_ssh_port}:22
-        depends_on:
-            - broker1
-
     qs-app-ui:
         # image: qs/qs-app-ui
         image: docker.qtort.com/qs/qs-app-ui
         networks:
             ep:
                 ipv4_address: 172.29.91.23
-
-    support-ui:
-        image: qs/support-ui
-        networks:
-            ep:
-                ipv4_address: 172.29.91.24
 
     persist-mongodb:
         image: qs/persist-mongodb
@@ -159,35 +104,6 @@ services:
         depends_on:
             - broker1
             - mongo1
-
-    persist-elasticsearch:
-        image: qs/persist-elasticsearch
-        entrypoint:
-            - node
-            - /opt/persist-elasticsearch
-            - --broker=${qs_broker}
-            - --elasticsearch=${qs_elasticsearch}
-            - --ll=${qs_loglevel}
-        networks:
-            - default
-        depends_on:
-            - broker1
-            - elasticsearch
-        deploy:
-            replicas: 0
-
-    qs-mssql:
-        image: qs/qs-mssql
-        entrypoint:
-            - node
-            - /opt/qs-mssql
-            - --broker=${qs_broker}
-            - --mssql=${qs_mssql}
-            - --ll=${qs_loglevel}
-        networks:
-            - default
-        depends_on:
-            - broker1
 
     auth-pep:
         image: qs/auth-pep
