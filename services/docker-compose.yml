@@ -1,0 +1,214 @@
+version: '3.1'
+
+networks:
+    # external/public facing network
+    #   for reverse proxies and similar
+    public:
+        ipam:
+            config:
+                - subnet: 172.29.90.0/24
+
+    # endpoint layer network
+    #   for endpoint layer microservices
+    ep:
+        ipam:
+            config:
+                - subnet: 172.29.91.0/24
+
+    # services layer network
+    #   for general service layer microservices
+    default:
+        ipam:
+            config:
+                - subnet: 172.29.95.0/24
+
+services:
+    nginx:
+        image: qs/nginx
+        networks:
+            - public
+            - ep
+        ports:
+            - ${qs_http_port}:80
+            - ${qs_https_port}:443
+        depends_on:
+            - api-web
+            - qs-app-ui
+            - support-ui
+        deploy:
+            placement:
+                constraints:
+                    - engine.labels.com.qtort.role == worker
+
+    broker1:
+        image: rabbitmq:3-management
+        networks:
+            - default
+        ports:
+            - 5672:5672
+            - 15672:15672
+        volumes:
+            - ${qs_data}/broker1-data:/var/lib/rabbitmq
+        deploy:
+            replicas: 0
+            placement:
+                constraints:
+                    - engine.labels.com.qtort.role == broker
+
+    elasticsearch:
+        image: elasticsearch:latest
+        networks:
+            - default
+        ports:
+            - 9200:9200
+            - 9300:9300
+        volumes:
+            - ${qs_data}/elasticsearch-data:/usr/share/elasticsearch/data
+        deploy:
+            replicas: 0
+            placement:
+                constraints:
+                    - engine.labels.com.qtort.role == db
+
+    kibana:
+        image: kibana:latest
+        networks:
+            - default
+        ports:
+            - 5601:5601
+        environment:
+            - "ELASTICSEARCH_URL=${qs_elasticsearch}"
+        depends_on:
+            - elasticsearch
+        deploy:
+            replicas: 0
+            placement:
+                constraints:
+                    - engine.labels.com.qtort.role == worker
+
+    mongo1:
+        image: mongo
+        networks:
+            - default
+        ports:
+            - 27017:27017
+        volumes:
+            - ${qs_data}/mongo1-data:/data/db
+        deploy:
+            replicas: 0
+            placement:
+                constraints:
+                    - engine.labels.com.qtort.role == db
+
+    api-web:
+        image: qs/api-web
+        entrypoint:
+            - node
+            - /opt/api-web
+            - --broker=${qs_broker}
+            - --defaultExchange=${qs_ep_exchange}
+            - --ll=${qs_loglevel}
+        networks:
+            ep:
+                ipv4_address: 172.29.91.21
+            default:
+        depends_on:
+            - broker1
+
+    ep-sftp-in:
+        image: qs/ep-sftp-in
+        entrypoint:
+            - node
+            - /opt/ep-sftp-in
+            - --broker=${qs_broker}
+            - --defaultExchange=${qs_ep_exchange}
+            - --ll=${qs_loglevel}
+        networks:
+            public:
+            ep:
+                ipv4_address: 172.29.91.22
+            default:
+        ports:
+            - ${qs_ssh_port}:22
+        depends_on:
+            - broker1
+
+    qs-app-ui:
+        # image: qs/qs-app-ui
+        image: docker.qtort.com/qs/qs-app-ui
+        networks:
+            ep:
+                ipv4_address: 172.29.91.23
+
+    support-ui:
+        image: qs/support-ui
+        networks:
+            ep:
+                ipv4_address: 172.29.91.24
+
+    persist-mongodb:
+        image: qs/persist-mongodb
+        entrypoint:
+            - node
+            - /opt/persist-mongodb
+            - --broker=${qs_broker}
+            - --mongo=${qs_mongo}
+            - --ll=${qs_loglevel}
+        networks:
+            - default
+        depends_on:
+            - broker1
+            - mongo1
+
+    persist-elasticsearch:
+        image: qs/persist-elasticsearch
+        entrypoint:
+            - node
+            - /opt/persist-elasticsearch
+            - --broker=${qs_broker}
+            - --elasticsearch=${qs_elasticsearch}
+            - --ll=${qs_loglevel}
+        networks:
+            - default
+        depends_on:
+            - broker1
+            - elasticsearch
+        deploy:
+            replicas: 0
+
+    qs-mssql:
+        image: qs/qs-mssql
+        entrypoint:
+            - node
+            - /opt/qs-mssql
+            - --broker=${qs_broker}
+            - --mssql=${qs_mssql}
+            - --ll=${qs_loglevel}
+        networks:
+            - default
+        depends_on:
+            - broker1
+
+    auth-pep:
+        image: qs/auth-pep
+        entrypoint:
+            - node
+            - /opt/auth-pep
+            - --broker=${qs_broker}
+            - --ll=${qs_loglevel}
+            - --identityServer=${qs_auth_identity_server}
+            - --domain=${qs_auth_domain}
+        depends_on:
+            - broker1
+
+    auth-identity-wso2is:
+        image: qs/auth-identity-wso2is
+        entrypoint:
+            - node
+            - /opt/auth-identity-wso2is
+            - --broker=${qs_broker}
+            - --ll=${qs_loglevel}
+            - --identityServer=${qs_auth_identity_server}
+            - --domain=${qs_auth_domain}
+        depends_on:
+            - broker1
