@@ -32,9 +32,8 @@ services:
             - ${qs_http_port}:80
             - ${qs_https_port}:443
         depends_on:
-            - api-web
-            - qs-app-ui
-            - support-ui
+            - ep-web
+            # - qs-app-ui
         deploy:
             placement:
                 constraints:
@@ -55,19 +54,19 @@ services:
                 constraints:
                     - engine.labels.com.qtort.role == broker
 
-    mongo1:
-        image: mongo
-        networks:
-            - default
-        ports:
-            - 27017:27017
-        volumes:
-            - ${qs_data}/mongo1-data:/data/db
-        deploy:
-            replicas: 0
-            placement:
-                constraints:
-                    - engine.labels.com.qtort.role == db
+    # mongo1:
+    #     image: mongo
+    #     networks:
+    #         - default
+    #     ports:
+    #         - 27017:27017
+    #     volumes:
+    #         - ${qs_data}/mongo1-data:/data/db
+    #     deploy:
+    #         replicas: 0
+    #         placement:
+    #             constraints:
+    #                 - engine.labels.com.qtort.role == db
 
     ep-web:
         image: qs/qtms-ep-web
@@ -84,47 +83,47 @@ services:
         depends_on:
             - broker1
 
-    qs-app-ui:
-        # image: qs/qs-app-ui
-        image: docker.qtort.com/qs/qs-app-ui
-        networks:
-            ep:
-                ipv4_address: 172.29.91.23
-
-    persist-mongodb:
-        image: qs/persist-mongodb
-        entrypoint:
-            - node
-            - /opt/persist-mongodb
-            - --broker=${qs_broker}
-            - --mongo=${qs_mongo}
-            - --ll=${qs_loglevel}
-        networks:
-            - default
-        depends_on:
-            - broker1
-            - mongo1
-
-    auth-pep:
-        image: qs/auth-pep
-        entrypoint:
-            - node
-            - /opt/auth-pep
-            - --broker=${qs_broker}
-            - --ll=${qs_loglevel}
-            - --identityServer=${qs_auth_identity_server}
-            - --domain=${qs_auth_domain}
-        depends_on:
-            - broker1
-
-    auth-identity-wso2is:
-        image: qs/auth-identity-wso2is
-        entrypoint:
-            - node
-            - /opt/auth-identity-wso2is
-            - --broker=${qs_broker}
-            - --ll=${qs_loglevel}
-            - --identityServer=${qs_auth_identity_server}
-            - --domain=${qs_auth_domain}
-        depends_on:
-            - broker1
+    # qs-app-ui:
+    #     # image: qs/qs-app-ui
+    #     image: docker.qtort.com/qs/qs-app-ui
+    #     networks:
+    #         ep:
+    #             ipv4_address: 172.29.91.23
+    #
+    # persist-mongodb:
+    #     image: qs/persist-mongodb
+    #     entrypoint:
+    #         - node
+    #         - /opt/persist-mongodb
+    #         - --broker=${qs_broker}
+    #         - --mongo=${qs_mongo}
+    #         - --ll=${qs_loglevel}
+    #     networks:
+    #         - default
+    #     depends_on:
+    #         - broker1
+    #         - mongo1
+    #
+    # auth-pep:
+    #     image: qs/auth-pep
+    #     entrypoint:
+    #         - node
+    #         - /opt/auth-pep
+    #         - --broker=${qs_broker}
+    #         - --ll=${qs_loglevel}
+    #         - --identityServer=${qs_auth_identity_server}
+    #         - --domain=${qs_auth_domain}
+    #     depends_on:
+    #         - broker1
+    #
+    # auth-identity-wso2is:
+    #     image: qs/auth-identity-wso2is
+    #     entrypoint:
+    #         - node
+    #         - /opt/auth-identity-wso2is
+    #         - --broker=${qs_broker}
+    #         - --ll=${qs_loglevel}
+    #         - --identityServer=${qs_auth_identity_server}
+    #         - --domain=${qs_auth_domain}
+    #     depends_on:
+    #         - broker1
