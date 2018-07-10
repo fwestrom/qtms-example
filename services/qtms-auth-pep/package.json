@@ -1,0 +1,19 @@
+{
+  "name": "qtms-auth-pep",
+  "version": "1.0.0",
+  "description": "The qtms-auth-pep microservice",
+  "main": "qtms-auth-pep.js",
+  "dependencies": {
+    "qtort-microservices": "^1.1.5",
+    "request": "^2.69.0",
+    "soap": "^0.13.0",
+    "url": "^0.11.0",
+    "xml2js": "^0.4.16"
+  },
+  "scripts": {
+    "watch": "node_modules/.bin/nodemon qtms-auth-pep"
+  },
+  "devDependencies": {
+    "nodemon": "^1.10.2"
+  }
+}

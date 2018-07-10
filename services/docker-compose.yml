@@ -28,12 +28,13 @@ services:
         networks:
             - public
             - ep
+            - default
         ports:
             - ${qs_http_port}:80
             - ${qs_https_port}:443
         depends_on:
             - qtms-ep-web
-            # - qs-app-ui
+            # - wso2is
         deploy:
             placement:
                 constraints:
@@ -103,19 +104,26 @@ services:
     #     depends_on:
     #         - broker1
     #         - mongo1
-    #
-    # auth-pep:
-    #     image: qs/auth-pep
-    #     entrypoint:
-    #         - node
-    #         - /opt/auth-pep
-    #         - --broker=${qs_broker}
-    #         - --ll=${qs_loglevel}
-    #         - --identityServer=${qs_auth_identity_server}
-    #         - --domain=${qs_auth_domain}
-    #     depends_on:
-    #         - broker1
-    #
+
+    qtms-auth-pep:
+        image: qs/qtms-auth-pep
+        entrypoint:
+            - node
+            - /opt/qtms-auth-pep
+            - --broker=${qs_broker}
+            - --ll=${qs_loglevel}
+            - --identityServer=${qs_auth_identity_server}
+            - --identityServerUser=${qs_auth_identity_server_user}
+            - --identityServerPassword=${qs_auth_identity_server_password}
+            - --domain=${qs_auth_domain}
+        depends_on:
+            - broker1
+        deploy:
+            replicas: 0
+            placement:
+                constraints:
+                    - engine.labels.com.qtort.role == identity
+
     # auth-identity-wso2is:
     #     image: qs/auth-identity-wso2is
     #     entrypoint:
@@ -127,3 +135,17 @@ services:
     #         - --domain=${qs_auth_domain}
     #     depends_on:
     #         - broker1
+
+    # wso2is:
+    #     image: qs/wso2is
+    #     networks:
+    #         - default
+    #     ports:
+    #         - 9443:9443
+    #     volumes:
+    #         - ${qs_data}/wso2is-data:/opt/wso2is-data
+    #     deploy:
+    #         replicas: 0
+    #         placement:
+    #             constraints:
+    #                 - engine.labels.com.qtort.role == identity
